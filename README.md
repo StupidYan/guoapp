@@ -74,6 +74,7 @@ Flutter 多端独立影视应用，手机、平板、电脑和电视分别适配
 | --- | --- |
 | Android 7.0+ | arm64-v8a / armeabi-v7a / x86_64 三种 APK，按设备架构选择（大多数手机选 arm64-v8a）；同一签名可覆盖升级，旧证书版本需卸载重装 |
 | Windows 10/11 x64 | 安装包 `*-setup.exe`，默认安装到当前用户、无需管理员权限；或便携 ZIP，解压后运行 `guoapp.exe`，保留所有 DLL 与 `data` 目录；便携版的设置、记录、缓存和默认下载都存在程序旁的 `userdata` 目录，删掉该目录则改回存到系统用户目录 |
+| Linux（Fedora）x64/arm64 | 解压 `tar.xz` 后运行 `guoapp`，需系统 `libmpv`（Fedora：`sudo dnf install mpv-libs`）；包内已补齐 ffmpeg_kit 运行库并修正 rpath |
 | iOS 15.1+ | 未签名 IPA，需自行签名或用 iloader 等工具侧载 |
 | macOS 12+ | 通用 dmg（Apple 芯片与 Intel），打开后拖入「应用程序」；未经公证，首次打开前需解除隔离（见下方） |
 
@@ -86,6 +87,15 @@ Flutter 多端独立影视应用，手机、平板、电脑和电视分别适配
 > ```sh
 > xattr -dr com.apple.quarantine /Applications/小果影视.app
 > ```
+
+## Linux（Fedora）适配
+
+本分支（`linux-fedora`）在[上游](https://github.com/Xanerix/guoapp)基础上新增 Linux（Fedora/KDE）平台适配，除此之外不含其他本地改动：
+
+- 一键构建：`python3 scripts/build_linux.py`，自动编译 Go 核心、vid.stab 与 x265 运行库，用 patchelf 修正 rpath，产出 `dist/linux/guoapp-<版本>-linux-<架构>.tar.xz` 便携包。
+- 播放默认 `vaapi-copy` 硬解；运行需系统 `libmpv`（Fedora：`sudo dnf install mpv-libs`）。
+- 构建依赖：Flutter SDK、Go、gcc、cmake、patchelf。
+- 解压 tar.xz 后直接运行包内 `guoapp`，无需安装。
 
 ## 使用说明
 

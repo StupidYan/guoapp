@@ -1,0 +1,4 @@
+flutter/ephemeral
+
+# Go 核心由 scripts/build_native.py 生成，不入库
+runner/libduanju_core.so

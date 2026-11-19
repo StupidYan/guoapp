@@ -1,10 +1,12 @@
 import argparse
 import os
+import platform
 import plistlib
 import re
 import shutil
 import subprocess
 import sys
+import tarfile
 import zipfile
 from pathlib import Path
 
@@ -12,7 +14,7 @@ from app_build import app
 
 root = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser()
-parser.add_argument('--platform', choices=['android', 'windows', 'macos'], required=True)
+parser.add_argument('--platform', choices=['android', 'windows', 'linux', 'macos'], required=True)
 parser.add_argument('--abi', action='append', choices=['arm64-v8a', 'armeabi-v7a', 'x86_64'])
 parser.add_argument('--identity', default='',
                     help='macOS 签名身份；默认 ad-hoc 签名（-），有 Developer ID 时传证书名')
@@ -249,6 +251,26 @@ elif options.platform == 'windows':
         archive.writestr('userdata/', '')
     artifacts.append(target)
     artifacts.append(package_windows_installer(bundle, bundle_executable))
+elif options.platform == 'linux':
+    arch = 'arm64' if platform.machine() == 'aarch64' else 'x64'
+    bundle = root / 'build' / 'linux' / arch / 'release' / 'bundle'
+    required = ['duanju_app', 'lib/libduanju_core.so', 'lib/libflutter_linux_gtk.so',
+                'lib/libapp.so', 'data/icudtl.dat']
+    missing = [name for name in required if not (bundle / name).is_file()]
+    if missing:
+        raise SystemExit('Linux 安装包缺少文件：' + ', '.join(missing))
+    executable = bundle / 'duanju_app'
+    executable.chmod(executable.stat().st_mode | 0o755)
+    target = output / f'{app.slug}-{version}-linux-{arch}.tar.xz'
+    top_level = f'{app.slug}-{version}-linux-{arch}'
+    with tarfile.open(target, 'w:xz') as archive:
+        for source in sorted(bundle.rglob('*')):
+            if source.is_file():
+                relative = source.relative_to(bundle).as_posix()
+                if relative == 'duanju_app':
+                    relative = app.slug
+                archive.add(source, arcname=top_level + '/' + relative)
+    artifacts.append(target)
 else:
     application = root / 'build' / 'macos' / 'Build' / 'Products' / 'Release' / 'duanju_app.app'
     if not application.is_dir():

@@ -728,6 +728,7 @@ class PlaybackSession extends ChangeNotifier {
       TelevisionDecoder.hardware when Platform.isIOS || Platform.isMacOS =>
         'videotoolbox-copy',
       _ when Platform.isWindows => 'd3d11va',
+      _ when Platform.isLinux => 'vaapi-copy',
       _ when Platform.isAndroid => 'auto-safe',
       _ when Platform.isMacOS => 'auto-safe',
       _ => null,

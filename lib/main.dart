@@ -35,6 +35,9 @@ Future<void> main() async {
     await windowManager.ensureInitialized();
     await rememberWindowFrame();
   }
+  if (Platform.isLinux) {
+    await windowManager.ensureInitialized();
+  }
   if (Platform.isMacOS) {
     await windowManager.ensureInitialized();
     try {

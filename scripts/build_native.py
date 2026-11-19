@@ -9,7 +9,7 @@ from app_build import app, prepare_bundled_modules
 
 root = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser()
-parser.add_argument('--platform', choices=['android', 'windows', 'darwin'], required=True)
+parser.add_argument('--platform', choices=['android', 'windows', 'linux', 'darwin'], required=True)
 parser.add_argument('--abi', action='append', choices=['arm64-v8a', 'armeabi-v7a', 'x86_64'])
 parser.add_argument('--bundle', action='append', default=[], help='内置模块目录，可多次指定；也可用逗号分隔写在环境变量 BUNDLED_MODULES 里')
 options = parser.parse_args()
@@ -69,6 +69,12 @@ elif options.platform == 'windows':
         raise SystemExit('请安装 MinGW-w64，并将其 bin 目录加入 PATH。')
     build('windows', 'amd64', compiler, root / 'windows' / 'runner' / 'duanju_core.dll',
           {'CGO_LDFLAGS': '-static-libgcc'})
+elif options.platform == 'linux':
+    compiler = shutil.which('gcc') or shutil.which('clang')
+    if not compiler:
+        raise SystemExit('请先安装 gcc 或 clang（Fedora：sudo dnf install gcc）。')
+    architecture = 'arm64' if platform.machine() == 'aarch64' else 'amd64'
+    build('linux', architecture, compiler, root / 'linux' / 'runner' / 'libduanju_core.so')
 else:
     if platform.system() != 'Darwin':
         raise SystemExit('macOS 核心需要在 macOS 上构建。')
